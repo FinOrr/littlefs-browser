@@ -17,7 +17,7 @@ REPO_URL="https://raw.githubusercontent.com/finorr/littlefs-browser/main"
 echo -e "${BLUE}"
 cat << "EOF"
 ╔═══════════════════════════════════════╗
-║   LittleFS Browser - Easy Installer  ║
+║   LittleFS Browser - Easy Installer   ║
 ╚═══════════════════════════════════════╝
 EOF
 echo -e "${NC}"
