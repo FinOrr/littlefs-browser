@@ -153,7 +153,7 @@
 
         <!-- Footer -->
         <div class="mt-8 text-center text-sm text-slate-500">
-            Professional LittleFS file system browser • Supports embedded devices and IoT storage
+            LittleFS Browser • Work in Progress
         </div>
     </div>
 
@@ -259,6 +259,17 @@
                     currentPath = '/';
                     setStatus('Connected', true);
                     document.getElementById('actionButtons').classList.remove('hidden');
+
+                    // Show detected parameters
+                    if (data.params) {
+                        console.log('Mounted with parameters:', data.params);
+                        const paramsMsg = `✓ Mounted successfully!\n\nDetected parameters:\n  Block size: ${data.params.block_size}\n  Read size: ${data.params.read_size}\n  Prog size: ${data.params.prog_size}`;
+                        // Show briefly, user can see in console if needed
+                        setTimeout(() => {
+                            console.log(paramsMsg);
+                        }, 100);
+                    }
+
                     await loadFiles();
                     await scanDevices();
                 } else {
