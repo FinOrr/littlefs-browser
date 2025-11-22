@@ -1,187 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LittleFS Browser</title>
+    <title>LittleFS Browser INDEX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        .spinner { animation: spin 1s linear infinite; }
+        .ping { animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        .toast-enter { animation: slideInRight 0.3s ease-out; }
+        .toast-exit { animation: slideOutRight 0.3s ease-in; }
 
-        @keyframes ping {
-
-            75%,
-            100% {
-                transform: scale(2);
-                opacity: 0;
-            }
-        }
-
-        .spinner {
-            animation: spin 1s linear infinite;
-        }
-
-        .ping {
-            animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
+        /* Glassmorphism effect */
+        .glass { backdrop-filter: blur(12px); background: rgba(255, 255, 255, 0.7); }
     </style>
 </head>
 
-<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
-    <div class="max-w-7xl mx-auto p-8">
+<body class="bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 min-h-screen">
+    <div class="max-w-[1400px] mx-auto p-6">
 
         <!-- Header -->
         <div class="mb-8">
-            <div class="flex items-center gap-4 mb-3">
-                <div class="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-3xl font-bold text-slate-800 tracking-tight">LittleFS Browser</h1>
-                    <p class="text-slate-500 mt-1">Access files from embedded devices</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Status Bar -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 mb-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-4">
                     <div class="relative">
-                        <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
-                        <div id="statusPing" class="absolute inset-0 w-2.5 h-2.5 rounded-full bg-green-500 ping hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-rose-500 to-orange-600 rounded-2xl blur-lg opacity-50"></div>
+                        <div class="relative p-3 bg-gradient-to-br from-rose-500 to-orange-600 rounded-2xl shadow-xl">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                            </svg>
                         </div>
                     </div>
-                    <span id="statusText" class="text-sm font-medium text-slate-700">Ready to connect</span>
+                    <h1 class="text-3xl font-bold bg-gradient-to-r from-rose-600 to-orange-600 bg-clip-text text-transparent">LittleFS Browser</h1>
                 </div>
-                <button onclick="scanDevices()"
-                    class="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl transition-all shadow-sm hover:shadow font-medium">
-                    <svg id="scanIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Scan Devices
-                </button>
+
+                <div class="flex items-center gap-3">
+                    <div class="glass px-4 py-2 rounded-xl border border-white/60 shadow-lg">
+                        <div class="flex items-center gap-2">
+                            <div class="relative">
+                                <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></div>
+                                <div id="statusPing" class="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ping hidden"></div>
+                            </div>
+                            <span id="statusText" class="text-sm font-medium text-slate-700">Ready</span>
+                        </div>
+                    </div>
+                    <button onclick="scanDevices()" class="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-white rounded-xl transition-all shadow-lg shadow-rose-500/30 font-medium">
+                        <svg id="scanIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Scan Devices
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div id="actionButtons" class="hidden glass rounded-2xl p-5 border border-white/60 shadow-lg fade-in">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-slate-800" id="connectedDeviceName">Device Connected</div>
+                            <div class="text-sm text-slate-600" id="connectedDeviceInfo">-</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="extractAll()" class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-lg transition-all shadow-md shadow-emerald-500/30 font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Download All
+                        </button>
+                        <button onclick="unmountDevice()" class="px-4 py-2 bg-white/80 hover:bg-white text-slate-700 rounded-lg transition-all font-medium border border-slate-200">
+                            Eject
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-            <!-- Device List -->
-            <div class="lg:col-span-4">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-                    <div class="p-5 border-b border-slate-100">
-                        <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                            </svg>
-                            Available Devices
+            <!-- Devices Column -->
+            <div class="xl:col-span-1 space-y-6">
+                <!-- Devices Card -->
+                <div class="glass rounded-2xl border border-white/60 shadow-xl overflow-hidden">
+                    <div class="p-5 border-b border-slate-200/50 bg-gradient-to-r from-rose-500/10 to-orange-500/10">
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <div class="p-1.5 bg-gradient-to-br from-rose-500 to-orange-600 rounded-lg">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                                </svg>
+                            </div>
+                            Devices
                         </h2>
                     </div>
-                    <div id="deviceList" class="p-4">
-                        <div class="text-center py-12 px-4">
-                            <div
-                                class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                    <div id="deviceList" class="p-4 max-h-[500px] overflow-y-auto">
+                        <div class="text-center py-16">
+                            <div class="w-16 h-16 bg-white/80 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                                 </svg>
                             </div>
-                            <p class="text-slate-600 font-medium mb-1">Click "Scan Devices"</p>
+                            <p class="text-slate-600 font-medium">No devices found</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Card -->
+                <div class="glass rounded-2xl border border-white/60 shadow-xl p-6">
+                    <h3 class="font-bold text-slate-800 mb-4">Info</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-center justify-between py-2 border-b border-slate-200/50">
+                            <span class="text-slate-600">Total Devices</span>
+                            <span id="deviceCount" class="font-semibold text-slate-800">0</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2 border-b border-slate-200/50">
+                            <span class="text-slate-600">Mounted</span>
+                            <span id="mountedCount" class="font-semibold text-emerald-600">0</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2">
+                            <span class="text-slate-600">Status</span>
+                            <span id="statusBadge" class="px-2 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium">Idle</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- File Browser -->
-            <div class="lg:col-span-8">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-                    <div class="p-5 border-b border-slate-100">
-                        <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                                <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            <!-- Files Column -->
+            <div class="xl:col-span-2">
+                <div class="glass rounded-2xl border border-white/60 shadow-xl overflow-hidden">
+                    <div class="p-5 border-b border-slate-200/50 bg-gradient-to-r from-rose-500/10 to-orange-500/10">
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <div class="p-1.5 bg-gradient-to-br from-rose-500 to-orange-600 rounded-lg">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                 </svg>
-                                Files & Folders
-                            </h2>
-                            <div id="actionButtons" class="hidden flex gap-2">
-                                <button onclick="extractAll()"
-                                    class="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all text-sm font-medium shadow-sm hover:shadow">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                    Download All
-                                </button>
-                                <button onclick="unmountDevice()"
-                                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all text-sm font-medium">
-                                    Disconnect
-                                </button>
                             </div>
-                        </div>
+                            Files
+                        </h2>
                     </div>
 
-                    <div id="fileBrowser" class="p-6">
-                        <div class="text-center py-20">
-                            <div
-                                class="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                                <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    <div id="fileBrowser" class="p-6 min-h-[600px]">
+                        <div class="text-center py-32">
+                            <div class="w-20 h-20 bg-white/80 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm">
+                                <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                 </svg>
                             </div>
-                            <p class="text-slate-600 font-medium mb-2">No device connected</p>
-                            <p class="text-sm text-slate-400">Select a device to browse its contents</p>
+                            <p class="text-slate-600 font-semibold text-lg">No Device Connected</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="mt-8 text-center text-sm text-slate-500">
-            LittleFS Browser • Work in Progress
         </div>
     </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-6 right-6 space-y-3 z-50"></div>
 
     <script>
         let currentDevice = null;
         let currentPath = '/';
 
+        const fileTypeColors = {
+            'config': 'blue',
+            'json': 'emerald',
+            'log': 'violet',
+            'txt': 'slate',
+            'bin': 'orange',
+            'dat': 'rose'
+        };
+
         function setStatus(text, isActive = false) {
             document.getElementById('statusText').textContent = text;
+            document.getElementById('statusBadge').textContent = isActive ? 'Active' : 'Idle';
             const dot = document.getElementById('statusDot');
             const ping = document.getElementById('statusPing');
 
             if (isActive) {
-                dot.className = 'w-2.5 h-2.5 rounded-full bg-green-500';
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500';
                 ping.classList.remove('hidden');
             } else {
-                dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-300';
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-400';
                 ping.classList.add('hidden');
             }
         }
 
+        function getFileColor(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            return fileTypeColors[ext] || 'slate';
+        }
+
         function getFileIcon(file) {
             if (file.type === 'dir') {
-                return `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                return `<svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                 </svg>`;
             }
-            return `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            return `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>`;
         }
@@ -189,53 +216,61 @@
         async function scanDevices() {
             const icon = document.getElementById('scanIcon');
             icon.classList.add('spinner');
-            setStatus('Scanning devices...');
+            setStatus('Scanning...');
 
             try {
                 const response = await fetch('/api/devices');
                 const devices = await response.json();
 
+                document.getElementById('deviceCount').textContent = devices.length;
+
                 const deviceList = document.getElementById('deviceList');
 
                 if (devices.length === 0) {
                     deviceList.innerHTML = `
-                        <div class="text-center py-12 px-4">
-                            <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <div class="text-center py-16">
+                            <div class="w-16 h-16 bg-white/80 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
                                 <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                                 </svg>
                             </div>
-                            <p class="text-slate-600 font-medium mb-1">No devices detected</p>
-                            <p class="text-sm text-slate-400">Connect an SD card or USB drive</p>
+                            <p class="text-slate-600 font-medium">No devices found</p>
                         </div>
                     `;
-                    setStatus('No devices found');
+                    setStatus('Ready');
                 } else {
-                    deviceList.innerHTML = '<div class="space-y-2">' + devices.map(device => `
-                        <button onclick="mountDevice('${device.path}')" 
-                                ${device.mounted ? 'disabled' : ''}
-                                class="w-full p-4 rounded-xl text-left transition-all ${device.mounted ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/60'} disabled:opacity-50 disabled:cursor-not-allowed">
-                            <div class="flex items-start gap-3">
-                                <div class="${device.mounted ? 'bg-white/20' : 'bg-white'} p-2 rounded-lg">
-                                    <svg class="w-5 h-5 ${device.mounted ? 'text-white' : 'text-slate-600'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                                    </svg>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="font-semibold mb-0.5">${device.label || 'Storage Device'}</div>
-                                    <div class="text-sm ${device.mounted ? 'text-blue-100' : 'text-slate-500'}">${device.name}</div>
-                                    <div class="flex items-center gap-2 mt-2">
-                                        <span class="text-xs px-2 py-0.5 rounded-full ${device.mounted ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'}">${device.size}</span>
-                                        <span class="text-xs ${device.mounted ? 'text-blue-100' : 'text-slate-400'}">${device.path}</span>
+                    deviceList.innerHTML = '<div class="space-y-3">' + devices.map(device => {
+                        const isMounted = device.mounted;
+                        return `
+                        <button onclick="mountDevice('${device.path}')"
+                                ${isMounted ? 'disabled' : ''}
+                                class="w-full group ${isMounted ? '' : 'fade-in'} ${isMounted ? 'cursor-not-allowed' : ''}">
+                            <div class="p-4 ${isMounted ? 'bg-gradient-to-br from-rose-500 to-orange-600 shadow-xl shadow-rose-500/30' : 'bg-white/60 hover:bg-white/90 shadow-md hover:shadow-lg'} border ${isMounted ? 'border-rose-400' : 'border-white/80 hover:border-rose-300'} rounded-xl text-left transition-all">
+                                <div class="flex items-center gap-4">
+                                    <div class="p-3 ${isMounted ? 'bg-white/20' : 'bg-gradient-to-br from-rose-100 to-orange-100 group-hover:from-rose-200 group-hover:to-orange-200'} rounded-xl transition-all shadow-sm">
+                                        <svg class="w-6 h-6 ${isMounted ? 'text-white' : 'text-rose-600'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                                        </svg>
                                     </div>
+                                    <div class="flex-1">
+                                        <div class="font-bold ${isMounted ? 'text-white' : 'text-slate-800'}">${device.label || 'Storage Device'}</div>
+                                        <div class="text-sm ${isMounted ? 'text-white/90' : 'text-slate-600'} mt-0.5">${device.name}</div>
+                                        <div class="flex items-center gap-2 mt-2">
+                                            <span class="text-xs px-2.5 py-1 ${isMounted ? 'bg-white/30 text-white' : 'bg-gradient-to-r from-rose-500 to-orange-500 text-white'} rounded-full font-medium shadow-sm">${device.size}</span>
+                                            <span class="text-xs ${isMounted ? 'text-white/80' : 'text-slate-500'}">${device.path}</span>
+                                        </div>
+                                    </div>
+                                    ${!isMounted ? `<svg class="w-5 h-5 text-slate-400 group-hover:text-rose-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>` : ''}
                                 </div>
                             </div>
                         </button>
-                    `).join('') + '</div>';
-                    setStatus('Devices found');
+                    `}).join('') + '</div>';
+                    setStatus('Ready');
                 }
             } catch (error) {
-                setStatus('Error scanning devices');
+                setStatus('Error');
                 console.error(error);
             } finally {
                 icon.classList.remove('spinner');
@@ -243,7 +278,7 @@
         }
 
         async function mountDevice(devicePath) {
-            setStatus('Mounting device...');
+            setStatus('Mounting...');
 
             try {
                 const response = await fetch('/api/mount', {
@@ -258,26 +293,26 @@
                     currentDevice = devicePath;
                     currentPath = '/';
                     setStatus('Connected', true);
-                    document.getElementById('actionButtons').classList.remove('hidden');
 
-                    // Show detected parameters
+                    // Update connected device info
+                    const deviceName = devicePath.split('/').pop();
+                    document.getElementById('connectedDeviceName').textContent = deviceName;
+                    document.getElementById('connectedDeviceInfo').textContent = devicePath;
+                    document.getElementById('actionButtons').classList.remove('hidden');
+                    document.getElementById('mountedCount').textContent = '1';
+
                     if (data.params) {
                         console.log('Mounted with parameters:', data.params);
-                        const paramsMsg = `✓ Mounted successfully!\n\nDetected parameters:\n  Block size: ${data.params.block_size}\n  Read size: ${data.params.read_size}\n  Prog size: ${data.params.prog_size}`;
-                        // Show briefly, user can see in console if needed
-                        setTimeout(() => {
-                            console.log(paramsMsg);
-                        }, 100);
                     }
 
                     await loadFiles();
                     await scanDevices();
                 } else {
                     setStatus('Mount failed');
-                    alert(`Failed to mount: ${data.error}\n\nTry different parameters or verify it's a LittleFS volume.`);
+                    alert(`Failed to mount: ${data.error}`);
                 }
             } catch (error) {
-                setStatus('Error mounting device');
+                setStatus('Error');
                 console.error(error);
             }
         }
@@ -285,7 +320,7 @@
         async function unmountDevice() {
             if (!currentDevice) return;
 
-            setStatus('Disconnecting...');
+            setStatus('Ejecting...');
 
             try {
                 const response = await fetch('/api/unmount', {
@@ -299,25 +334,25 @@
                 if (data.success) {
                     currentDevice = null;
                     currentPath = '/';
-                    setStatus('Ready to connect');
+                    setStatus('Ready');
                     document.getElementById('actionButtons').classList.add('hidden');
+                    document.getElementById('mountedCount').textContent = '0';
                     document.getElementById('fileBrowser').innerHTML = `
-                        <div class="text-center py-20">
-                            <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                                <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="text-center py-32">
+                            <div class="w-20 h-20 bg-white/80 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm">
+                                <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                 </svg>
                             </div>
-                            <p class="text-slate-600 font-medium mb-2">No device connected</p>
-                            <p class="text-sm text-slate-400">Select a device to browse its contents</p>
+                            <p class="text-slate-600 font-semibold text-lg">No Device Connected</p>
                         </div>
                     `;
                     await scanDevices();
                 } else {
-                    setStatus('Unmount failed');
+                    setStatus('Eject failed');
                 }
             } catch (error) {
-                setStatus('Error unmounting');
+                setStatus('Error');
                 console.error(error);
             }
         }
@@ -333,50 +368,61 @@
 
                 if (data.success) {
                     const breadcrumbs = path.split('/').filter(p => p);
+                    let breadcrumbPath = '';
                     const breadcrumbHtml = `
-                        <button onclick="loadFiles('/')" class="px-3 py-1.5 hover:bg-slate-100 rounded-lg transition-colors font-medium text-slate-700">Home</button>
+                        <button onclick="loadFiles('/')" class="px-3 py-1.5 hover:bg-white/60 rounded-lg transition-all font-medium text-rose-600 flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            Home
+                        </button>
                         ${breadcrumbs.map((part, idx) => {
-                        const isLast = idx === breadcrumbs.length - 1;
-                        return `<span class="text-slate-300">/</span><span class="px-3 py-1.5 rounded-lg ${isLast ? 'bg-slate-100 text-slate-800 font-medium' : 'text-slate-600'}">${part}</span>`;
-                    }).join('')}
-                        ${path !== '/' ? '<button onclick="goBack()" class="ml-auto text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1.5 px-3 py-1.5 hover:bg-blue-50 rounded-lg transition-colors">← Back</button>' : ''}
+                            breadcrumbPath += '/' + part;
+                            const clickPath = breadcrumbPath;
+                            const isLast = idx === breadcrumbs.length - 1;
+                            return `<span class="text-slate-300">/</span>${isLast ?
+                                `<span class="px-3 py-1.5 bg-gradient-to-r from-rose-500/10 to-orange-500/10 border border-rose-200 text-rose-700 rounded-lg font-medium">${part}</span>` :
+                                `<button onclick="loadFiles('${clickPath}')" class="px-3 py-1.5 hover:bg-white/60 rounded-lg transition-all text-slate-600 font-medium">${part}</button>`}`;
+                        }).join('')}
                     `;
 
                     const filesHtml = data.items.map(file => {
                         const isDir = file.type === 'dir';
+                        const color = isDir ? 'blue' : getFileColor(file.name);
+                        const bgClass = isDir ? 'from-blue-100 to-indigo-100 group-hover:from-blue-200 group-hover:to-indigo-200' :
+                                       `from-${color}-100 to-${color}-100 group-hover:from-${color}-200 group-hover:to-${color}-200`;
+                        const textClass = isDir ? 'text-blue-600' : `text-${color}-600`;
+
                         return `
-                        <div class="flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-all group border border-transparent hover:border-slate-200">
-                            <button onclick="${isDir ? `loadFiles('${path === '/' ? '/' + file.name : path + '/' + file.name}')` : ''}" 
-                                    class="flex items-center gap-4 flex-1 text-left">
-                                <div class="p-2.5 rounded-xl ${isDir ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-600'} group-hover:scale-110 transition-transform">
-                                    ${getFileIcon(file)}
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="font-medium text-slate-800 mb-0.5">${file.name}</div>
-                                    <div class="text-sm text-slate-500 flex items-center gap-3">
-                                        <span>${file.size}</span>
-                                        <span class="text-slate-300">•</span>
-                                        <span>${file.modified}</span>
+                        <div class="p-4 bg-white/60 hover:bg-white/90 border border-white/80 hover:border-${color}-300 rounded-xl transition-all shadow-md hover:shadow-lg group ${isDir ? 'cursor-pointer' : ''}">
+                            <div class="flex items-center justify-between">
+                                <div onclick="${isDir ? `loadFiles('${path === '/' ? '/' + file.name : path + '/' + file.name}')` : ''}" class="flex items-center gap-3 flex-1">
+                                    <div class="p-3 bg-gradient-to-br ${bgClass} rounded-xl transition-all">
+                                        ${getFileIcon(file)}
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-slate-800">${file.name}</div>
+                                        <div class="text-xs text-slate-500 mt-1">${isDir ? 'Folder' : file.size} • ${file.modified}</div>
                                     </div>
                                 </div>
-                            </button>
-                            ${!isDir ? `
-                                <a href="/api/download?device=${encodeURIComponent(currentDevice)}&path=${encodeURIComponent((path === '/' ? '/' : path + '/') + file.name)}" 
-                                   class="opacity-0 group-hover:opacity-100 transition-all p-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-sm hover:shadow" title="Download">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                </a>
-                            ` : ''}
+                                ${!isDir ? `
+                                    <a href="/api/download?device=${encodeURIComponent(currentDevice)}&path=${encodeURIComponent((path === '/' ? '/' : path + '/') + file.name)}"
+                                       class="opacity-0 group-hover:opacity-100 transition-all p-2 bg-gradient-to-r from-${color}-500 to-${color}-600 hover:from-${color}-600 hover:to-${color}-700 text-white rounded-lg shadow-md">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                    </a>
+                                ` : ''}
+                            </div>
                         </div>
                     `}).join('');
 
                     document.getElementById('fileBrowser').innerHTML = `
-                        <div class="mb-5 flex items-center gap-2 text-sm pb-4 border-b border-slate-100">
+                        <div class="mb-5 flex items-center gap-2 text-sm pb-4 border-b border-slate-200/50">
                             ${breadcrumbHtml}
                         </div>
-                        <div class="space-y-1.5">
-                            ${filesHtml || '<div class="text-center py-8 text-slate-400">Empty directory</div>'}
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                            ${filesHtml || '<div class="col-span-2 text-center py-8 text-slate-400">Empty directory</div>'}
                         </div>
                     `;
                 }
@@ -385,16 +431,10 @@
             }
         }
 
-        function goBack() {
-            const parts = currentPath.split('/').filter(p => p);
-            parts.pop();
-            loadFiles('/' + parts.join('/'));
-        }
-
         async function extractAll() {
             if (!currentDevice) return;
 
-            setStatus('Downloading all files...');
+            setStatus('Downloading...');
 
             try {
                 const response = await fetch('/api/extract-all', {
@@ -406,21 +446,147 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    setStatus('Download complete', true);
-                    alert(`All files extracted to:\n${data.destination}`);
-                    setTimeout(() => setStatus('Connected', true), 2000);
+                    setStatus('Connected', true);
+                    showDownloadToast(data.destination, data.fileCount || '0 files', data.totalSize || '0 B');
                 } else {
                     setStatus('Download failed');
-                    alert(`Failed to extract: ${data.error}`);
+                    showErrorToast(data.error);
                 }
             } catch (error) {
-                setStatus('Error downloading files');
+                setStatus('Error');
+                showErrorToast('An unexpected error occurred');
                 console.error(error);
             }
         }
 
+        function showDownloadToast(destination, fileCount, totalSize) {
+            const toast = document.createElement('div');
+            toast.className = 'glass border border-white/60 rounded-xl shadow-2xl p-5 max-w-md toast-enter';
+
+            toast.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex-shrink-0">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="font-bold text-slate-800">Download Complete!</div>
+                            <button onclick="dismissToast(this)" class="text-slate-400 hover:text-slate-600 transition-colors ml-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="text-sm text-slate-600 mb-3">All files successfully extracted</div>
+
+                        <!-- Info Grid -->
+                        <div class="bg-white/60 border border-slate-200 rounded-lg p-3 mb-3 space-y-2">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-slate-600">Files Extracted:</span>
+                                <span class="font-semibold text-slate-800">${fileCount}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs border-t border-slate-200 pt-2">
+                                <span class="text-slate-600">Total Size:</span>
+                                <span class="font-semibold text-slate-800">${totalSize}</span>
+                            </div>
+                        </div>
+
+                        <!-- Path -->
+                        <div class="mb-3">
+                            <div class="text-xs text-slate-600 mb-1.5 font-medium">Location:</div>
+                            <div class="text-xs font-mono text-slate-900 bg-white/60 px-2.5 py-2 rounded-lg border border-slate-200 break-all">
+                                ${destination}
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <button onclick="copyToClipboard('${destination}', this)" class="w-full text-sm bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 py-2 rounded-lg transition-all font-medium flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Copy Path
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('toastContainer').appendChild(toast);
+
+            // Auto dismiss after 6 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    dismissToast(toast);
+                }
+            }, 6000);
+        }
+
+        function showErrorToast(errorMessage) {
+            const toast = document.createElement('div');
+            toast.className = 'glass border border-red-200 rounded-xl shadow-2xl p-5 max-w-md toast-enter';
+
+            toast.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="p-2.5 bg-gradient-to-br from-red-500 to-rose-600 rounded-lg flex-shrink-0">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="font-bold text-slate-800">Download Failed</div>
+                            <button onclick="dismissToast(this)" class="text-slate-400 hover:text-slate-600 transition-colors ml-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="text-sm text-slate-600">${errorMessage}</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('toastContainer').appendChild(toast);
+
+            // Auto dismiss after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    dismissToast(toast);
+                }
+            }, 5000);
+        }
+
+        function dismissToast(element) {
+            const toast = element.closest ? element.closest('.toast-enter') : element;
+            if (!toast) return;
+
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-exit');
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 300);
+        }
+
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text);
+            const originalHTML = button.innerHTML;
+            button.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Copied!
+            `;
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+            }, 2000);
+        }
+
+        // Initial scan
         scanDevices();
     </script>
 </body>
-
 </html>
