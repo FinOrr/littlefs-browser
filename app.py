@@ -207,9 +207,28 @@ def get_block_devices() -> List[Dict[str, Any]]:
         List of device information dictionaries
     """
     devices = []
+
+    # Devices to exclude (system disks, loop devices, etc.)
+    exclude_patterns = [
+        'nvme',      # NVMe drives (usually system drives)
+        'sda',       # SATA drives (usually system drives)
+        'sdb',       # Additional SATA drives
+        'sdc',       # Additional SATA drives
+        'vda',       # Virtual drives
+        'loop',      # Loop devices
+        'sr',        # CD/DVD drives
+        'dm-',       # Device mapper (LVM, etc.)
+    ]
+
+    # Include patterns (removable storage likely to have LittleFS)
+    include_patterns = [
+        'mmcblk',    # SD/MMC cards
+        'mtdblock',  # MTD block devices (flash memory)
+    ]
+
     try:
         result = subprocess.run(
-            ['lsblk', '-J', '-o', 'NAME,SIZE,TYPE,MOUNTPOINT,LABEL'],
+            ['lsblk', '-J', '-o', 'NAME,SIZE,TYPE,MOUNTPOINT,LABEL,RM,HOTPLUG'],
             capture_output=True,
             text=True,
             check=True
@@ -218,14 +237,38 @@ def get_block_devices() -> List[Dict[str, Any]]:
         data = json.loads(result.stdout)
 
         for device in data.get('blockdevices', []):
-            dev_path = f"/dev/{device['name']}"
+            dev_name = device['name']
+            dev_path = f"/dev/{dev_name}"
 
-            if device['type'] in ['disk', 'part']:
+            # Skip if device type is not disk or partition
+            if device['type'] not in ['disk', 'part']:
+                continue
+
+            # Check if device matches include patterns
+            is_included = any(dev_name.startswith(pattern) for pattern in include_patterns)
+
+            # Check if device matches exclude patterns
+            is_excluded = any(dev_name.startswith(pattern) for pattern in exclude_patterns)
+
+            # If we have include patterns match, always include
+            # Otherwise, check if it's removable/hotplug and not excluded
+            should_include = False
+
+            if is_included:
+                should_include = True
+            elif not is_excluded:
+                # Check if it's removable or hotplug
+                is_removable = device.get('rm', '0') == '1'
+                is_hotplug = device.get('hotplug', '0') == '1'
+                should_include = is_removable or is_hotplug
+
+            if should_include:
                 mount = device.get('mountpoint', '')
+                # Only show unmounted devices or our own mounts
                 if not mount or config.MOUNT_BASE in mount:
                     devices.append({
                         'path': dev_path,
-                        'name': device['name'],
+                        'name': dev_name,
                         'size': device['size'],
                         'label': device.get('label', 'Unlabeled'),
                         'mounted': dev_path in active_mounts
@@ -610,11 +653,70 @@ def api_download():
     if not os.path.exists(full_path) or not os.path.isfile(full_path):
         return jsonify({'success': False, 'error': ERROR_FILE_NOT_FOUND}), 404
 
-    return send_file(
-        full_path,
-        as_attachment=True,
-        download_name=os.path.basename(full_path)
-    )
+    # Create a temporary copy with correct ownership
+    try:
+        import tempfile
+        temp_dir = tempfile.mkdtemp()
+        temp_file = os.path.join(temp_dir, os.path.basename(full_path))
+        shutil.copy2(full_path, temp_file)
+
+        # Fix ownership of the temp file
+        sudo_uid = os.environ.get('SUDO_UID')
+        sudo_gid = os.environ.get('SUDO_GID')
+        if sudo_uid and sudo_gid:
+            os.chown(temp_file, int(sudo_uid), int(sudo_gid))
+            os.chown(temp_dir, int(sudo_uid), int(sudo_gid))
+
+        # Send the file and clean up temp directory after
+        response = send_file(
+            temp_file,
+            as_attachment=True,
+            download_name=os.path.basename(full_path)
+        )
+
+        # Schedule cleanup (temp dir will be cleaned by OS eventually if we don't)
+        import atexit
+        atexit.register(lambda: shutil.rmtree(temp_dir, ignore_errors=True))
+
+        return response
+    except Exception as e:
+        logger.error("Error preparing download: %s", e)
+        # Fallback to direct send if temp copy fails
+        return send_file(
+            full_path,
+            as_attachment=True,
+            download_name=os.path.basename(full_path)
+        )
+
+
+def fix_ownership(path: str) -> None:
+    """Fix ownership of extracted files to match the user who invoked sudo
+
+    Args:
+        path: Path to file or directory to fix ownership
+    """
+    try:
+        # Get the actual user's UID and GID (before sudo)
+        sudo_uid = os.environ.get('SUDO_UID')
+        sudo_gid = os.environ.get('SUDO_GID')
+
+        if sudo_uid and sudo_gid:
+            uid = int(sudo_uid)
+            gid = int(sudo_gid)
+
+            # Change ownership recursively
+            for root, dirs, files in os.walk(path):
+                os.chown(root, uid, gid)
+                for d in dirs:
+                    os.chown(os.path.join(root, d), uid, gid)
+                for f in files:
+                    os.chown(os.path.join(root, f), uid, gid)
+
+            # Also fix the top-level path itself
+            os.chown(path, uid, gid)
+            logger.debug("Fixed ownership of %s to %s:%s", path, uid, gid)
+    except Exception as e:
+        logger.warning("Could not fix ownership of %s: %s", path, e)
 
 
 @app.route('/api/extract-all', methods=['POST'])
@@ -635,19 +737,36 @@ def api_extract_all():
     try:
         os.makedirs(dest_path, exist_ok=True)
 
+        # Fix ownership of destination directory
+        fix_ownership(dest_path)
+
+        file_count = 0
+        total_size = 0
+
         for item in os.listdir(mount_point):
             src = os.path.join(mount_point, item)
             dst = os.path.join(dest_path, item)
 
             if os.path.isdir(src):
                 shutil.copytree(src, dst, dirs_exist_ok=True)
+                # Count files in directory
+                for root, dirs, files in os.walk(dst):
+                    for f in files:
+                        file_count += 1
+                        total_size += os.path.getsize(os.path.join(root, f))
+                fix_ownership(dst)
             else:
                 shutil.copy2(src, dst)
+                file_count += 1
+                total_size += os.path.getsize(dst)
+                fix_ownership(dst)
 
         logger.info("Extracted all files from %s to %s", device_path, dest_path)
         return jsonify({
             'success': True,
-            'destination': dest_path
+            'destination': dest_path,
+            'fileCount': f'{file_count} files',
+            'totalSize': format_size(total_size)
         })
     except Exception as e:
         logger.error("Error extracting files: %s", e)
