@@ -13,7 +13,8 @@ import time
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 
-from flask import Flask, render_template_string, jsonify, send_file, request
+from flask import Flask, render_template_string, jsonify, send_file, request, send_from_directory
+from flask_cors import CORS
 
 # Configure logging
 logging.basicConfig(
@@ -63,7 +64,8 @@ config = Config()
 active_mounts: Dict[str, Dict[str, Any]] = {}
 
 # Flask app
-app = Flask(__name__)
+app = Flask(__name__, static_folder='frontend/dist', static_url_path='')
+CORS(app)
 
 
 def ensure_mount_dir() -> None:
@@ -525,7 +527,12 @@ def load_template() -> str:
 
 @app.route('/')
 def index():
-    """Render the main page"""
+    """Serve React app"""
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/old')
+def old_index():
+    """Render the old template-based page"""
     return render_template_string(load_template())
 
 

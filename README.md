@@ -1,6 +1,6 @@
 # LittleFS Browser
 
-A web-based file browser for LittleFS filesystems on Ubuntu. Access files from embedded devices (ESP32, STM32, nRF52, etc.) through a clean interface.
+A web-based file browser for LittleFS filesystems on Ubuntu. Access files from embedded devices (ESP32, STM32, nRF52, etc.) through a React interface built with shadcn/ui.
 
 ## Installation
 
@@ -38,18 +38,62 @@ Open http://localhost:5000 in your browser.
 
 ## Features
 
+- React UI with shadcn/ui components
 - Automatic device detection
 - Automatic mounting with common parameter detection
-- Web-based file browser
+- File browser with breadcrumb navigation
 - Individual file downloads or bulk extraction
+- Toast notifications for user feedback
+- Responsive design
+- Dark/light mode toggle
 - Proper unmounting and cleanup
 
 ## System Requirements
 
 - Ubuntu 20.04 or newer (Debian-based distros should work)
-- Python 3.6+
-- Sudo access for device mounting
-- ~100MB disk space
+- Python 3.8+
+- Node.js 18+ (for development)
+
+## Quick Start
+
+### For Users (Production)
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Build frontend (one time)
+cd frontend && npm install && npm run build && cd ..
+
+# Run the application
+sudo python3 app.py
+```
+
+Visit `http://localhost:5000`
+
+### For Developers
+```bash
+# Easy way
+./start-dev.sh
+
+# Manual way - Terminal 1
+sudo python3 app.py
+
+# Manual way - Terminal 2
+cd frontend && npm run dev
+```
+
+Visit `http://localhost:5173` for development with hot reload.
+
+See [QUICKSTART.md](QUICKSTART.md) for detailed instructions.
+See [MIGRATION.md](MIGRATION.md) for migration details.
+
+## Technology Stack
+
+- Frontend: React + TypeScript + Vite
+- UI Components: shadcn/ui
+- Styling: Tailwind CSS v4
+- Backend: Flask (Python)
+- API: RESTful JSON endpoints
 
 ## What Gets Installed
 
