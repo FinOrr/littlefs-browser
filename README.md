@@ -2,6 +2,8 @@
 
 A web-based file browser for LittleFS filesystems on Ubuntu. Access files from embedded devices (ESP32, STM32, nRF52, etc.) through a React interface built with shadcn/ui.
 
+![LittleFS Browser UI](docs/ui-example.png)
+
 ## Installation
 
 ### One-Command Install
