@@ -64,8 +64,8 @@ pip install -r requirements.txt
 # Build frontend (one time)
 cd frontend && npm install && npm run build && cd ..
 
-# Run the application
-sudo python3 app.py
+# Run the application (requires sudo for mounting devices)
+sudo -E .venv/bin/python app.py
 ```
 
 Visit `http://localhost:5000`
@@ -76,16 +76,13 @@ Visit `http://localhost:5000`
 ./start-dev.sh
 
 # Manual way - Terminal 1
-sudo python3 app.py
+sudo -E .venv/bin/python app.py
 
 # Manual way - Terminal 2
 cd frontend && npm run dev
 ```
 
 Visit `http://localhost:5173` for development with hot reload.
-
-See [QUICKSTART.md](QUICKSTART.md) for detailed instructions.
-See [MIGRATION.md](MIGRATION.md) for migration details.
 
 ## Technology Stack
 
