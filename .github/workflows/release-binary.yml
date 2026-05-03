@@ -1,0 +1,95 @@
+name: Release Binary
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: Build (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential libfuse-dev pkg-config git \
+            python3 python3-pip python3-venv
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build React frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Compile littlefs-fuse
+        run: |
+          git clone --depth 1 https://github.com/littlefs-project/littlefs-fuse /tmp/littlefs-fuse
+          make -C /tmp/littlefs-fuse -j$(nproc)
+          mkdir -p lfs_bundled
+          cp /tmp/littlefs-fuse/lfs lfs_bundled/lfs
+          chmod +x lfs_bundled/lfs
+
+      - name: Install Python build dependencies
+        run: pip3 install pyinstaller flask flask-cors
+
+      - name: Build binary with PyInstaller
+        run: pyinstaller --clean --noconfirm littlefs_browser.spec
+
+      - name: Rename binary
+        run: mv dist/littlefs-browser dist/littlefs-browser-linux-${{ matrix.arch }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: littlefs-browser-linux-${{ matrix.arch }}
+          path: dist/littlefs-browser-linux-${{ matrix.arch }}
+
+  release:
+    name: Attach to Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Determine tag name
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "name=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload binaries to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          files: artifacts/**/*

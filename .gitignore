@@ -14,7 +14,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Python build artefact — scoped to avoid catching frontend/src/lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -30,7 +31,10 @@ MANIFEST
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
-*.spec
+# *.spec  - our spec file is intentionally tracked
+
+# Build artefacts for PyInstaller binary
+lfs_bundled/
 
 # Installer logs
 pip-log.txt
